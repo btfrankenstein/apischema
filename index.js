@@ -40,6 +40,9 @@ export default (config) => {
     },
     define(url, schema = {}, method = 'get') {
       return (params) => {
+        // 最终发送给接口的参数
+        let sendParams = {}
+
         // 验证请求参数的合法性
         Object.keys(schema).forEach((param) => {
           if (schema[param].required && !params[param]) throw new TypeError(`缺少参数：请添加${param}参数`);
@@ -47,7 +50,13 @@ export default (config) => {
             throw new TypeError(`类型错误：参数${param}类型错误`);
           }
         });
-        return io[method](this.combineUrl(method, url, params), params);
+
+        // 如果只是用于接口URL中的参数，则不加入进最终发送给接口的参数
+        if(!schema[param].urlOnly) {
+          sendParams[param] = params[param]；
+        }
+
+        return io[method](this.combineUrl(method, url, params), sendParams);
       };
     },
     get(url, schema) {
