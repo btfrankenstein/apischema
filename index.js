@@ -27,7 +27,7 @@ export default (config) => {
   return {
     combineUrl(method, url, params) {
       // 替换path参数
-      let combineUrl = url.replace(/\$\{([a-zA-Z]*)\}/g, ($1, $2) => {
+      let combineUrl = url.replace(/\{([a-zA-Z]*)\}/g, ($1, $2) => {
         console.log($1, $2);
         return params[$2];
       });
@@ -41,7 +41,7 @@ export default (config) => {
     define(url, schema = {}, method = 'get') {
       return (params) => {
         // 最终发送给接口的参数
-        let sendParams = {}
+        let sendParams = {};
 
         // 验证请求参数的合法性
         Object.keys(schema).forEach((param) => {
@@ -49,12 +49,11 @@ export default (config) => {
           if (schema[param].type !== schemaTypes[getType(params[param])]) {
             throw new TypeError(`类型错误：参数${param}类型错误`);
           }
+          // 如果只是用于接口URL中的参数，则不加入进最终发送给接口的参数
+          if(!schema[param].urlOnly) {
+            sendParams[param] = params[param];
+          }
         });
-
-        // 如果只是用于接口URL中的参数，则不加入进最终发送给接口的参数
-        if(!schema[param].urlOnly) {
-          sendParams[param] = params[param]；
-        }
 
         return io[method](this.combineUrl(method, url, params), sendParams);
       };
@@ -64,6 +63,12 @@ export default (config) => {
     },
     post(url, schema) {
       return this.define(url, schema, 'post');
+    },
+    delete(url, schema) {
+      return this.define(url, schema, 'delete');
+    },
+    put(url, schema) {
+      return this.define(url, schema, 'put');
     },
   };
 };
